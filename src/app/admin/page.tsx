@@ -18,7 +18,9 @@ import {
   Pencil,
   Trash2,
   Play,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Menu,
+  User
 } from 'lucide-react'
 
 // Types
@@ -201,7 +203,13 @@ function PriorityBadge({ priority }: { priority: string }) {
 }
 
 // Sidebar Navigation
-function Sidebar({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) {
+function Sidebar({ activeTab, setActiveTab, isOpen, onClose, isMobile }: { 
+  activeTab: string; 
+  setActiveTab: (tab: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  isMobile: boolean;
+}) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: Film },
@@ -211,68 +219,98 @@ function Sidebar({ activeTab, setActiveTab }: { activeTab: string; setActiveTab:
   ]
 
   return (
-    <aside className="w-64 bg-card border-r border-border flex flex-col fixed left-0 top-0 bottom-0 z-40">
-      <div className="p-6 border-b border-border">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <motion.span
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-lg font-medium tracking-tight"
-          >
-            Zero Cut
-          </motion.span>
-          <div className="w-px h-4 bg-border" />
-          <span className="text-xs tracking-widest text-muted-foreground uppercase">Admin</span>
-        </Link>
-      </div>
+    <>
+      {/* Mobile Overlay */}
+      {isMobile && (
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+            />
+          )}
+        </AnimatePresence>
+      )}
 
-      <nav className="flex-1 p-4">
-        <ul className="space-y-1">
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <motion.button
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full px-4 py-3 text-sm text-left transition-all flex items-center gap-3 rounded-md ${
-                  activeTab === item.id
-                    ? 'text-foreground bg-muted'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </motion.button>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="p-4 border-t border-border"
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed left-0 top-0 bottom-0 z-50
+          bg-card border-r border-border flex flex-col
+          transition-transform duration-300 ease-in-out
+          ${isMobile ? 'w-72' : 'w-64'}
+          ${isMobile && !isOpen ? '-translate-x-full' : 'translate-x-0'}
+          lg:translate-x-0
+        `}
       >
-        <div className="flex items-center gap-3 px-4 py-3">
-          <motion.div
-            className="w-8 h-8 bg-[var(--accent)] rounded-full flex items-center justify-center text-sm font-medium text-black"
-            whileHover={{ scale: 1.1 }}
-          >
-            ZC
-          </motion.div>
-          <div>
-            <p className="text-sm">Studio Admin</p>
-            <span className="text-xs text-muted-foreground">admin@zerocut.com</span>
-          </div>
+        <div className="p-4 sm:p-6 border-b border-border">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-base sm:text-lg font-medium tracking-tight"
+            >
+              Zero Cut
+            </motion.span>
+            <div className="hidden sm:block w-px h-4 bg-border" />
+            <span className="hidden sm:block text-xs tracking-widest text-muted-foreground uppercase">Admin</span>
+          </Link>
         </div>
-      </motion.div>
-    </aside>
+
+        <nav className="flex-1 p-2 sm:p-4 overflow-y-auto">
+          <ul className="space-y-1">
+            {menuItems.map((item) => (
+              <li key={item.id}>
+                <motion.button
+                  onClick={() => {
+                    setActiveTab(item.id)
+                    if (isMobile) onClose()
+                  }}
+                  className={`w-full px-3 sm:px-4 py-3 text-sm text-left transition-all flex items-center gap-3 rounded-md ${
+                    activeTab === item.id
+                      ? 'text-foreground bg-muted'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </motion.button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="p-2 sm:p-4 border-t border-border"
+        >
+          <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-3">
+            <motion.div
+              className="w-8 h-8 bg-[var(--accent)] rounded-full flex items-center justify-center text-sm font-medium text-black flex-shrink-0"
+              whileHover={{ scale: 1.1 }}
+            >
+              ZC
+            </motion.div>
+            <div className="min-w-0 flex-1 hidden sm:block">
+              <p className="text-sm truncate">Studio Admin</p>
+              <span className="text-xs text-muted-foreground truncate block">admin@zerocut.com</span>
+            </div>
+          </div>
+        </motion.div>
+      </aside>
+    </>
   )
 }
 
 // Header
-function Header({ activeTab }: { activeTab: string }) {
+function Header({ activeTab, onMenuClick, isMobile }: { activeTab: string; onMenuClick: () => void; isMobile: boolean }) {
   const titles = {
     dashboard: 'Dashboard',
     projects: 'Projects',
@@ -293,32 +331,45 @@ function Header({ activeTab }: { activeTab: string }) {
     <motion.header
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="h-16 bg-background border-b border-border flex items-center justify-between px-8"
+      className="h-14 sm:h-16 bg-background border-b border-border flex items-center justify-between px-3 sm:px-6 lg:px-8"
     >
-      <div>
-        <motion.h1 className="text-lg font-medium" key={activeTab}>
-          {titles[activeTab as keyof typeof titles]}
-        </motion.h1>
-        <motion.p className="text-xs text-muted-foreground" key={`subtitle-${activeTab}`}>
-          {subtitles[activeTab as keyof typeof subtitles]}
-        </motion.p>
+      <div className="flex items-center gap-2 sm:gap-4 flex-1">
+        {isMobile && (
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={onMenuClick}
+            className="p-2 hover:bg-secondary rounded-md transition-colors"
+          >
+            <Menu size={20} />
+          </motion.button>
+        )}
+        <div className="min-w-0">
+          <motion.h1 className="text-base sm:text-lg font-medium truncate" key={activeTab}>
+            {titles[activeTab as keyof typeof titles]}
+          </motion.h1>
+          {!isMobile && (
+            <motion.p className="text-xs text-muted-foreground" key={`subtitle-${activeTab}`}>
+              {subtitles[activeTab as keyof typeof subtitles]}
+            </motion.p>
+          )}
+        </div>
       </div>
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        className="flex items-center gap-4"
+        className="flex items-center gap-2 sm:gap-4"
       >
         <ThemeToggle />
         <Link
           href="/"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+          className="hidden sm:flex text-sm text-muted-foreground hover:text-foreground transition-colors items-center gap-2"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
             <polyline points="15 3 21 3 21 9" />
             <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
-          View Site
+          <span className="hidden md:inline">View Site</span>
         </Link>
       </motion.div>
     </motion.header>
@@ -342,10 +393,10 @@ function Modal({ isOpen, onClose, title, children }: { isOpen: boolean; onClose:
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-card border border-border rounded-lg shadow-2xl z-50 max-h-[90vh] overflow-hidden flex flex-col"
+            className="fixed inset-2 sm:inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl bg-card border border-border rounded-lg shadow-2xl z-50 max-h-[90vh] overflow-hidden flex flex-col"
           >
-            <div className="p-6 border-b border-border flex items-center justify-between">
-              <h2 className="text-lg font-medium">{title}</h2>
+            <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between">
+              <h2 className="text-base sm:text-lg font-medium">{title}</h2>
               <motion.button
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
@@ -355,7 +406,7 @@ function Modal({ isOpen, onClose, title, children }: { isOpen: boolean; onClose:
                 <X size={20} />
               </motion.button>
             </div>
-            <div className="p-6 overflow-y-auto flex-1">{children}</div>
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">{children}</div>
           </motion.div>
         </>
       )}
@@ -379,27 +430,27 @@ function DashboardTab({ setActiveTab }: { setActiveTab: (tab: string) => void })
       animate="visible"
       exit="exit"
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="p-6 bg-card border border-border rounded-lg hover:border-[var(--accent)]/30 transition-all"
+            className="p-4 sm:p-6 bg-card border border-border rounded-lg hover:border-[var(--accent)]/30 transition-all"
           >
-            <span className="text-sm text-muted-foreground">{stat.label}</span>
-            <div className="mt-3 flex items-end justify-between">
-              <span className="text-3xl font-light tracking-tight">{stat.value}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">{stat.label}</span>
+            <div className="mt-2 sm:mt-3 flex items-end justify-between">
+              <span className="text-2xl sm:text-3xl font-light tracking-tight">{stat.value}</span>
               {stat.change !== 0 && (
                 <motion.span
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.1 + 0.2 }}
-                  className={`text-sm ${stat.positive ? 'text-green-500' : 'text-red-500'}`}
+                  className={`text-xs sm:text-sm ${stat.positive ? 'text-green-500' : 'text-red-500'}`}
                 >
                   {stat.positive ? '+' : ''}{stat.change}%
                 </motion.span>
@@ -409,15 +460,15 @@ function DashboardTab({ setActiveTab }: { setActiveTab: (tab: string) => void })
         ))}
       </div>
 
-      {/* Recent Activity */}
+      {/* Quick Actions */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-card border border-border p-6 rounded-lg"
+        className="bg-card border border-border p-4 sm:p-6 rounded-lg"
       >
-        <h3 className="font-medium mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <h3 className="font-medium mb-3 sm:mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: 'Add Project', icon: Plus, action: () => setActiveTab('projects') },
             { label: 'View Messages', icon: Mail, action: () => setActiveTab('messages') },
@@ -432,10 +483,10 @@ function DashboardTab({ setActiveTab }: { setActiveTab: (tab: string) => void })
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={action.action}
-              className="p-4 border border-border rounded-lg hover:border-[var(--accent)]/50 transition-all text-left"
+              className="p-3 sm:p-4 border border-border rounded-lg hover:border-[var(--accent)]/50 transition-all text-left"
             >
-              <action.icon size={32} className="mb-2 text-[var(--accent)]" />
-              <span className="text-sm">{action.label}</span>
+              <action.icon size={24} className="mb-1 sm:mb-2 text-[var(--accent)]" />
+              <span className="text-xs sm:text-sm">{action.label}</span>
             </motion.button>
           ))}
         </div>
@@ -534,18 +585,18 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
       animate="visible"
       exit="exit"
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {/* Filter Tabs */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {(['all', 'published', 'draft', 'archived'] as const).map((f) => (
             <motion.button
               key={f}
               onClick={() => setFilter(f)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`px-4 py-2 text-sm rounded-md transition-all capitalize ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-md transition-all capitalize ${
                 filter === f
                   ? 'bg-foreground text-background'
                   : 'bg-secondary text-muted-foreground hover:text-foreground'
@@ -559,15 +610,16 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setAddModalOpen(true)}
-          className="px-4 py-2 bg-[var(--accent)] text-black rounded-md text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors flex items-center gap-2"
+          className="w-full sm:w-auto px-4 py-2 bg-[var(--accent)] text-black rounded-md text-xs sm:text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors flex items-center justify-center gap-2"
         >
           <Plus size={16} />
-          Add New Project
+          <span className="hidden sm:inline">Add New Project</span>
+          <span className="sm:hidden">Add Project</span>
         </motion.button>
       </div>
 
       {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <AnimatePresence mode="popLayout">
           {filteredProjects.map((project) => (
             <motion.div
@@ -579,7 +631,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
               whileHover={{ y: -4 }}
               className="bg-card border border-border overflow-hidden hover:border-[var(--accent)]/30 transition-all duration-300 rounded-lg"
             >
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-40 sm:h-48 overflow-hidden">
                 <Image
                   src={project.thumbnail}
                   alt={project.title}
@@ -590,12 +642,12 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                   <StatusBadge status={project.status} />
                 </div>
               </div>
-              <div className="p-6">
-                <h3 className="text-lg font-medium mb-1">{project.title}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{project.type} · {project.year}</p>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{project.description}</p>
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <div className="flex items-center gap-6 text-sm">
+              <div className="p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-medium mb-1">{project.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-2">{project.type} · {project.year}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-2">{project.description}</p>
+                <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-border">
+                  <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm">
                     <div>
                       <span className="text-muted-foreground">Views</span>
                       <p className="font-medium">{project.views.toLocaleString()}</p>
@@ -641,7 +693,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
               value={newProject.title}
               onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
               placeholder="Project title"
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
             />
           </div>
 
@@ -652,7 +704,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
               value={newProject.type}
               onChange={(e) => setNewProject({ ...newProject, type: e.target.value })}
               placeholder="Brand Film, Documentary, etc."
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
             />
           </div>
 
@@ -674,7 +726,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 }`}
               >
                 <ImageIcon size={18} />
-                Image
+                <span className="text-xs sm:text-sm">Image</span>
               </button>
               <button
                 type="button"
@@ -686,7 +738,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 }`}
               >
                 <Play size={18} />
-                Video
+                <span className="text-xs sm:text-sm">Video</span>
               </button>
             </div>
 
@@ -701,7 +753,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 }`}
               >
                 <Upload size={18} />
-                Upload
+                <span className="text-xs sm:text-sm">Upload</span>
               </button>
               <button
                 type="button"
@@ -713,7 +765,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 }`}
               >
                 <Link2 size={18} />
-                Link
+                <span className="text-xs sm:text-sm">Link</span>
               </button>
             </div>
 
@@ -722,7 +774,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 <label className="text-sm text-muted-foreground mb-2 block">
                   Upload {newProject.mediaType === 'video' ? 'Video' : 'Image'} File *
                 </label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-[var(--accent)]/50 transition-colors">
+                <div className="border-2 border-dashed border-border rounded-lg p-4 sm:p-6 text-center hover:border-[var(--accent)]/50 transition-colors">
                   <input
                     type="file"
                     accept={newProject.mediaType === 'video' ? 'video/*' : 'image/*'}
@@ -734,8 +786,8 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                     htmlFor="media-upload"
                     className="cursor-pointer block"
                   >
-                    <Upload size={32} className="mx-auto mb-2 text-[var(--accent)]" />
-                    <p className="text-sm text-muted-foreground">
+                    <Upload size={28} className="mx-auto mb-2 text-[var(--accent)]" />
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {newProject.mediaFile ? newProject.mediaFile.name : `Click to select ${newProject.mediaType} file`}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -754,7 +806,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                   value={newProject.mediaLink}
                   onChange={(e) => setNewProject({ ...newProject, mediaLink: e.target.value })}
                   placeholder={newProject.mediaType === 'video' ? 'https://youtube.com/...' : 'https://...'}
-                  className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+                  className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
                 />
               </div>
             )}
@@ -767,7 +819,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
               onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
               placeholder="Project description"
               rows={3}
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 resize-none"
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 resize-none text-sm"
             />
           </div>
           <div>
@@ -777,7 +829,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
               value={newProject.client}
               onChange={(e) => setNewProject({ ...newProject, client: e.target.value })}
               placeholder="Client name"
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
             />
           </div>
           <div>
@@ -785,7 +837,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
             <select
               value={newProject.status}
               onChange={(e) => setNewProject({ ...newProject, status: e.target.value as any })}
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
             >
               <option value="draft">Draft</option>
               <option value="published">Published</option>
@@ -814,7 +866,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 type="text"
                 value={editingProject.title}
                 onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })}
-                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
               />
             </div>
             <div>
@@ -823,7 +875,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 type="text"
                 value={editingProject.type}
                 onChange={(e) => setEditingProject({ ...editingProject, type: e.target.value })}
-                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
               />
             </div>
             <div>
@@ -832,7 +884,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 value={editingProject.description}
                 onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 resize-none"
+                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 resize-none text-sm"
               />
             </div>
             <div>
@@ -841,7 +893,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
                 type="text"
                 value={editingProject.client}
                 onChange={(e) => setEditingProject({ ...editingProject, client: e.target.value })}
-                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
               />
             </div>
             <div>
@@ -849,7 +901,7 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
               <select
                 value={editingProject.status}
                 onChange={(e) => setEditingProject({ ...editingProject, status: e.target.value as any })}
-                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+                className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
               >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
@@ -867,7 +919,6 @@ function ProjectsTab({ projects, setProjects }: { projects: Project[]; setProjec
           </div>
         )}
       </Modal>
-
     </motion.div>
   )
 }
@@ -893,33 +944,33 @@ function AnalyticsTab() {
       animate="visible"
       exit="exit"
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {/* Traffic Chart */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card border border-border p-6 rounded-lg"
+        className="bg-card border border-border p-4 sm:p-6 rounded-lg"
       >
-        <h3 className="font-medium mb-6">Weekly Traffic</h3>
-        <div className="space-y-4">
+        <h3 className="font-medium mb-4 sm:mb-6">Weekly Traffic</h3>
+        <div className="space-y-3 sm:space-y-4">
           {trafficData.map((data, i) => (
             <motion.div
               key={data.day}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="flex items-center gap-4"
+              className="flex items-center gap-2 sm:gap-4"
             >
-              <span className="w-12 text-sm text-muted-foreground font-mono">{data.day}</span>
-              <div className="flex-1 h-10 bg-secondary/50 relative overflow-hidden rounded-md">
+              <span className="w-10 sm:w-12 text-xs sm:text-sm text-muted-foreground font-mono">{data.day}</span>
+              <div className="flex-1 h-8 sm:h-10 bg-secondary/50 relative overflow-hidden rounded-md">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${(data.views / maxViews) * 100}%` }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
                   className="absolute left-0 top-0 h-full bg-gradient-to-r from-foreground/20 to-foreground/5"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm text-muted-foreground">
                   {data.views.toLocaleString()}
                 </div>
               </div>
@@ -929,7 +980,7 @@ function AnalyticsTab() {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: 'Total Views', value: '31,200' },
           { label: 'Unique Visitors', value: '12,450' },
@@ -941,10 +992,10 @@ function AnalyticsTab() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 + i * 0.1 }}
-            className="p-6 bg-card border border-border rounded-lg"
+            className="p-4 sm:p-6 bg-card border border-border rounded-lg"
           >
-            <span className="text-sm text-muted-foreground">{stat.label}</span>
-            <p className="text-2xl font-light mt-2">{stat.value}</p>
+            <span className="text-xs sm:text-sm text-muted-foreground">{stat.label}</span>
+            <p className="text-xl sm:text-2xl font-light mt-1 sm:mt-2">{stat.value}</p>
           </motion.div>
         ))}
       </div>
@@ -956,6 +1007,7 @@ function AnalyticsTab() {
 function MessagesTab({ messages, setMessages }: { messages: Message[]; setMessages: (messages: Message[]) => void }) {
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
+  const [showDetail, setShowDetail] = useState(false)
 
   const filteredMessages = messages.filter(m =>
     filter === 'all' ? true : filter === 'unread' ? !m.read : m.read
@@ -980,12 +1032,25 @@ function MessagesTab({ messages, setMessages }: { messages: Message[]; setMessag
   const handleDeleteMessage = (id: number) => {
     if (confirm('Are you sure you want to delete this message?')) {
       setMessages(messages.filter(m => m.id !== id))
-      if (selectedMessage?.id === id) setSelectedMessage(null)
+      if (selectedMessage?.id === id) {
+        setSelectedMessage(null)
+        setShowDetail(false)
+      }
     }
   }
 
   const handleReply = () => {
     alert('Reply functionality would open email client: ' + selectedMessage?.email)
+  }
+
+  const handleMessageClick = (message: Message) => {
+    setSelectedMessage(message)
+    handleMarkAsRead(message.id)
+    setShowDetail(true)
+  }
+
+  const handleBackToList = () => {
+    setShowDetail(false)
   }
 
   return (
@@ -995,17 +1060,17 @@ function MessagesTab({ messages, setMessages }: { messages: Message[]; setMessag
       animate="visible"
       exit="exit"
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {(['all', 'unread', 'read'] as const).map((f) => (
           <motion.button
             key={f}
             onClick={() => setFilter(f)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`px-4 py-2 text-sm rounded-md transition-all capitalize ${
+            className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-md transition-all capitalize ${
               filter === f
                 ? 'bg-foreground text-background'
                 : 'bg-secondary text-muted-foreground hover:text-foreground'
@@ -1016,9 +1081,9 @@ function MessagesTab({ messages, setMessages }: { messages: Message[]; setMessag
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Messages List */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className={`lg:col-span-1 space-y-3 sm:space-y-4 ${showDetail ? 'hidden lg:block' : 'block'}`}>
           <AnimatePresence mode="popLayout">
             {filteredMessages.map((message) => (
               <motion.div
@@ -1028,28 +1093,25 @@ function MessagesTab({ messages, setMessages }: { messages: Message[]; setMessag
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 whileHover={{ scale: 1.02 }}
-                onClick={() => {
-                  setSelectedMessage(message)
-                  handleMarkAsRead(message.id)
-                }}
-                className={`p-4 bg-card border border-border cursor-pointer hover:border-[var(--accent)]/30 transition-all rounded-lg ${
+                onClick={() => handleMessageClick(message)}
+                className={`p-3 sm:p-4 bg-card border border-border cursor-pointer hover:border-[var(--accent)]/30 transition-all rounded-lg ${
                   selectedMessage?.id === message.id ? 'border-[var(--accent)]' : ''
                 } ${!message.read ? 'bg-secondary/20' : ''}`}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     {!message.read && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="w-2 h-2 bg-[var(--accent)] rounded-full"
+                        className="w-2 h-2 bg-[var(--accent)] rounded-full flex-shrink-0"
                       />
                     )}
-                    <span className="font-medium text-sm">{message.name}</span>
+                    <span className="font-medium text-xs sm:text-sm truncate">{message.name}</span>
                   </div>
                   <PriorityBadge priority={message.priority} />
                 </div>
-                <h4 className="text-sm font-medium mb-1">{message.subject}</h4>
+                <h4 className="text-xs sm:text-sm font-medium mb-1 truncate">{message.subject}</h4>
                 <p className="text-xs text-muted-foreground line-clamp-2">{message.message}</p>
                 <p className="text-xs text-muted-foreground mt-2">{formatDate(message.date)}</p>
               </motion.div>
@@ -1057,36 +1119,44 @@ function MessagesTab({ messages, setMessages }: { messages: Message[]; setMessag
           </AnimatePresence>
         </div>
 
-        {/* Message Detail */}
-        <AnimatePresence mode="wait">
-          {selectedMessage ? (
-            <motion.div
-              key={selectedMessage.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="lg:col-span-2"
-            >
-              <div className="bg-card border border-border p-6 rounded-lg h-full">
-                <div className="mb-6 pb-6 border-b border-border">
-                  <h2 className="text-xl font-medium mb-2">{selectedMessage.subject}</h2>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-lg font-medium">
-                      {selectedMessage.name.charAt(0)}
+        {/* Message Detail - Mobile shows as full width when selected, Desktop shows as 2 cols */}
+        <div className={`lg:col-span-2 ${showDetail ? 'block' : 'hidden lg:block'}`}>
+          <AnimatePresence mode="wait">
+            {selectedMessage ? (
+              <motion.div
+                key={selectedMessage.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="bg-card border border-border p-4 sm:p-6 rounded-lg h-full"
+              >
+                {/* Mobile back button */}
+                <button
+                  onClick={handleBackToList}
+                  className="lg:hidden mb-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  ← Back to messages
+                </button>
+
+                <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-border">
+                  <div className="flex items-start justify-between gap-2 mb-4">
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-base sm:text-xl font-medium mb-2">{selectedMessage.subject}</h2>
+                      <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">{selectedMessage.name}</span>
+                        <span>•</span>
+                        <span className="truncate">{selectedMessage.email}</span>
+                        <span>•</span>
+                        <span>{formatDate(selectedMessage.date)}</span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{selectedMessage.name}</p>
-                      <p className="text-sm text-muted-foreground">{selectedMessage.email}</p>
-                    </div>
-                    <span className="text-sm text-muted-foreground ml-auto">
-                      {formatDate(selectedMessage.date)}
-                    </span>
+                    <PriorityBadge priority={selectedMessage.priority} />
                   </div>
                 </div>
-                <div className="mb-6">
-                  <p className="text-sm leading-relaxed">{selectedMessage.message}</p>
+                <div className="mb-4 sm:mb-6">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedMessage.message}</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -1114,19 +1184,19 @@ function MessagesTab({ messages, setMessages }: { messages: Message[]; setMessag
                     Delete
                   </motion.button>
                 </div>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="lg:col-span-2 flex items-center justify-center bg-card border border-border p-12 rounded-lg"
-            >
-              <p className="text-muted-foreground">Select a message to view details</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="hidden lg:flex items-center justify-center bg-card border border-border p-8 sm:p-12 rounded-lg"
+              >
+                <p className="text-muted-foreground text-sm sm:text-base">Select a message to view details</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </motion.div>
   )
@@ -1156,14 +1226,14 @@ function SettingsTab() {
       animate="visible"
       exit="exit"
       transition={{ duration: 0.3 }}
-      className="max-w-2xl space-y-6"
+      className="max-w-2xl space-y-4 sm:space-y-6"
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card border border-border p-6 rounded-lg"
+        className="bg-card border border-border p-4 sm:p-6 rounded-lg"
       >
-        <h3 className="font-medium mb-6">General Settings</h3>
+        <h3 className="font-medium mb-4 sm:mb-6">General Settings</h3>
         <div className="space-y-4">
           <div>
             <label className="text-sm text-muted-foreground mb-2 block">Site Name</label>
@@ -1171,7 +1241,7 @@ function SettingsTab() {
               type="text"
               value={settings.siteName}
               onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
             />
           </div>
           <div>
@@ -1180,7 +1250,7 @@ function SettingsTab() {
               type="text"
               value={settings.tagline}
               onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
             />
           </div>
           <div>
@@ -1189,7 +1259,7 @@ function SettingsTab() {
               type="email"
               value={settings.email}
               onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50"
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-md focus:outline-none focus:border-[var(--accent)]/50 text-sm"
             />
           </div>
         </div>
@@ -1199,15 +1269,15 @@ function SettingsTab() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-card border border-border p-6 rounded-lg"
+        className="bg-card border border-border p-4 sm:p-6 rounded-lg"
       >
-        <h3 className="font-medium mb-6">Preferences</h3>
+        <h3 className="font-medium mb-4 sm:mb-6">Preferences</h3>
         <div className="space-y-4">
           {[
             { key: 'notifications', label: 'Email Notifications', desc: 'Receive email notifications for new messages' },
             { key: 'darkMode', label: 'Dark Mode', desc: 'Use dark theme by default' }
           ].map((item) => (
-            <div key={item.key} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+            <div key={item.key} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-border last:border-0 gap-2">
               <div>
                 <span className="text-sm font-medium">{item.label}</span>
                 <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
@@ -1237,7 +1307,7 @@ function SettingsTab() {
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={handleSave}
-        className="w-full px-6 py-3 bg-foreground text-background rounded-md text-sm font-medium"
+        className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-foreground text-background rounded-md text-sm font-medium"
       >
         {saved ? '✓ Saved!' : 'Save Changes'}
       </motion.button>
@@ -1250,13 +1320,38 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [projects, setProjects] = useState<Project[]>(initialProjects)
   const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true)
+      }
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div className="ml-64">
-        <Header activeTab={activeTab} />
-        <main className="p-8 bg-background min-h-[calc(100vh-4rem)]">
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isMobile={isMobile}
+      />
+      <div className={`transition-all duration-300 ${isMobile ? 'ml-0' : 'lg:ml-64'}`}>
+        <Header 
+          activeTab={activeTab} 
+          onMenuClick={() => setSidebarOpen(true)}
+          isMobile={isMobile}
+        />
+        <main className="p-3 sm:p-4 md:p-6 lg:p-8 bg-background min-h-[calc(100vh-3.5rem)] lg:min-h-[calc(100vh-4rem)]">
           <AnimatePresence mode="wait">
             {activeTab === 'dashboard' && (
               <DashboardTab key="dashboard" setActiveTab={setActiveTab} />
